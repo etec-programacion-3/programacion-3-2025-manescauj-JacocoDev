@@ -1,6 +1,4 @@
-# Proyecto Integrador
+# Backend - Proyecto Integrador
 
 Notas:
- - Framework: FastAPI
- - ORM: Tortoise ORM
- - Gestor BD: SQLite
+ - Ejecutar el servidor -> uvicorn app.main:app --reload
