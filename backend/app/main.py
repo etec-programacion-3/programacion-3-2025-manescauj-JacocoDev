@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from tortoise.contrib.fastapi import register_tortoise
+from app.config import DATABASE_URL 
 
 app = FastAPI(title = "Proyecto Integrador")
 
