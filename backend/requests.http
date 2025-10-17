@@ -1,0 +1,71 @@
+### ===============================
+### 🏋️ GRUPOS MUSCULARES
+### ===============================
+
+### GET: listar todos los grupos musculares
+GET http://127.0.0.1:8000/grupos-musculares
+Accept: application/json
+
+###
+
+### POST: crear un nuevo grupo muscular
+POST http://127.0.0.1:8000/grupos-musculares
+Content-Type: application/json
+
+{
+  "nombre": "Espalda"
+}
+
+###
+
+### PUT: actualizar grupo muscular
+PUT http://127.0.0.1:8000/grupos-musculares/1
+Content-Type: application/json
+
+{
+  "nombre": "Dorsales"
+}
+
+###
+
+### DELETE: eliminar grupo muscular
+DELETE http://127.0.0.1:8000/grupos-musculares/1
+Accept: application/json
+
+### ===============================
+### 🏋️‍♂️ EJERCICIOS
+### ===============================
+
+### GET: listar todos los ejercicios
+GET http://127.0.0.1:8000/ejercicios
+Accept: application/json
+
+###
+
+### POST: crear un ejercicio (usa un grupo muscular existente)
+POST http://127.0.0.1:8000/ejercicios
+Content-Type: application/json
+
+{
+  "nombre": "Dominadas",
+  "grupo_muscular_id": 2
+}
+
+### GET: filtrar ejercicios por grupo muscular
+GET http://127.0.0.1:8000/ejercicios?grupo_muscular_id=2
+Accept: application/json
+
+### PUT: actualizar un ejercicio
+PUT http://127.0.0.1:8000/ejercicios/1
+Content-Type: application/json
+
+{
+  "nombre": "Dominadas Supinas",
+  "grupo_muscular_id": 2
+}
+
+###
+
+### DELETE: eliminar un ejercicio
+DELETE http://127.0.0.1:8000/ejercicios/1
+Accept: application/json
