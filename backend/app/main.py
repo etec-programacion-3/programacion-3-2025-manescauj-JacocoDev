@@ -1,7 +1,10 @@
 from fastapi import FastAPI
 from tortoise.contrib.fastapi import register_tortoise
-from app.config import DATABASE_URL
-from app import routes  
+from app.routes import router
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 app = FastAPI(title="Proyecto Integrador")
 
@@ -9,13 +12,11 @@ app = FastAPI(title="Proyecto Integrador")
 async def root():
     return {"message": "API Funcionando"}
 
-# Registrar rutas
-app.include_router(routes.router)
+app.include_router(router)
 
-# Conectar base de datos
 register_tortoise(
     app,
-    db_url=DATABASE_URL,
+    db_url="sqlite://app/database/db.sqlite3",
     modules={"models": ["app.models"]},
     generate_schemas=True,
     add_exception_handlers=True,
