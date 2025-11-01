@@ -1,99 +1,180 @@
-from fastapi import APIRouter, HTTPException
-from app.models import (
-    GrupoMuscular,
-    Ejercicio,
-    GrupoMuscular_Pydantic,
-    EjercicioIn_Pydantic,
-    EjercicioOut_Pydantic
-)
-from tortoise.queryset import Q
+from fastapi import APIRouter, HTTPException, Query
+from typing import List, Optional
+from app import models, schemas
 
 router = APIRouter()
 
-# ===============================
-#   🏋️ CRUD GRUPOS MUSCULARES
-# ===============================
-@router.get("/grupos-musculares")
+
+# ==========================================================
+# GRUPOS MUSCULARES
+# ==========================================================
+
+@router.get("/grupos-musculares", response_model=List[schemas.GrupoMuscularOut])
 async def listar_grupos():
-    return await GrupoMuscular_Pydantic.from_queryset(GrupoMuscular.all())
+    return await models.GrupoMuscular.all()
 
-@router.post("/grupos-musculares")
-async def crear_grupo(grupo: GrupoMuscular_Pydantic):
-    if not grupo.nombre.strip():
+
+@router.post("/grupos-musculares", response_model=schemas.GrupoMuscularOut)
+async def crear_grupo(datos: schemas.GrupoMuscularIn):
+    if not datos.nombre.strip():
         raise HTTPException(status_code=400, detail="El nombre no puede estar vacío.")
-    grupo_obj = await GrupoMuscular.create(**grupo.dict())
-    return await GrupoMuscular_Pydantic.from_tortoise_orm(grupo_obj)
+    return await models.GrupoMuscular.create(nombre=datos.nombre)
 
-@router.get("/grupos-musculares/{id}")
+
+@router.get("/grupos-musculares/{id}", response_model=schemas.GrupoMuscularOut)
 async def obtener_grupo(id: int):
-    grupo = await GrupoMuscular.get_or_none(id=id)
+    grupo = await models.GrupoMuscular.get_or_none(id=id)
     if not grupo:
         raise HTTPException(status_code=404, detail="Grupo muscular no encontrado.")
-    return await GrupoMuscular_Pydantic.from_tortoise_orm(grupo)
+    return grupo
 
-@router.put("/grupos-musculares/{id}")
-async def actualizar_grupo(id: int, datos: GrupoMuscular_Pydantic):
-    grupo = await GrupoMuscular.get_or_none(id=id)
+
+@router.put("/grupos-musculares/{id}", response_model=schemas.GrupoMuscularOut)
+async def actualizar_grupo(id: int, datos: schemas.GrupoMuscularIn):
+    grupo = await models.GrupoMuscular.get_or_none(id=id)
     if not grupo:
         raise HTTPException(status_code=404, detail="Grupo muscular no encontrado.")
     grupo.nombre = datos.nombre
     await grupo.save()
-    return await GrupoMuscular_Pydantic.from_tortoise_orm(grupo)
+    return grupo
+
 
 @router.delete("/grupos-musculares/{id}")
 async def eliminar_grupo(id: int):
-    eliminado = await GrupoMuscular.filter(id=id).delete()
+    eliminado = await models.GrupoMuscular.filter(id=id).delete()
     if not eliminado:
         raise HTTPException(status_code=404, detail="Grupo muscular no encontrado.")
     return {"message": "Grupo muscular eliminado correctamente."}
 
 
-# ===============================
-#   🏋️ CRUD EJERCICIOS
-# ===============================
-@router.get("/ejercicios", response_model=list[EjercicioOut_Pydantic])
-async def listar_ejercicios(grupo_muscular_id: int = None):
-    qs = Ejercicio.all().prefetch_related("grupo_muscular")
-    if grupo_muscular_id is not None:
-        qs = qs.filter(grupo_muscular_id=grupo_muscular_id)
-    return await qs
+# ==========================================================
+# EJERCICIOS
+# ==========================================================
 
-@router.get("/ejercicios/{id}", response_model=EjercicioOut_Pydantic)
+@router.get("/ejercicios", response_model=List[schemas.EjercicioOut])
+async def listar_ejercicios(grupo_muscular_id: Optional[int] = Query(None)):
+    if grupo_muscular_id:
+        ejercicios = await models.Ejercicio.filter(
+            grupo_muscular_id=grupo_muscular_id
+        ).prefetch_related("grupo_muscular")
+    else:
+        ejercicios = await models.Ejercicio.all().prefetch_related("grupo_muscular")
+    return ejercicios
+
+
+@router.get("/ejercicios/{id}", response_model=schemas.EjercicioOut)
 async def obtener_ejercicio(id: int):
-    ejercicio = await Ejercicio.get_or_none(id=id).prefetch_related("grupo_muscular")
+    ejercicio = await models.Ejercicio.get_or_none(id=id).prefetch_related("grupo_muscular")
     if not ejercicio:
         raise HTTPException(status_code=404, detail="Ejercicio no encontrado.")
     return ejercicio
 
-@router.post("/ejercicios", response_model=EjercicioOut_Pydantic)
-async def crear_ejercicio(ejercicio: EjercicioIn_Pydantic):
-    grupo = await GrupoMuscular.get_or_none(id=ejercicio.grupo_muscular_id)
+
+@router.post("/ejercicios", response_model=schemas.EjercicioOut)
+async def crear_ejercicio(datos: schemas.EjercicioIn):
+    if not datos.nombre.strip():
+        raise HTTPException(status_code=400, detail="El nombre no puede estar vacío.")
+
+    grupo = await models.GrupoMuscular.get_or_none(id=datos.grupo_muscular_id)
     if not grupo:
-        raise HTTPException(status_code=404, detail="El grupo muscular indicado no existe.")
-    ejercicio_obj = await Ejercicio.create(
-        nombre=ejercicio.nombre,
-        descripcion=ejercicio.descripcion,
+        raise HTTPException(status_code=404, detail="Grupo muscular no encontrado.")
+
+    nuevo = await models.Ejercicio.create(
+        nombre=datos.nombre,
+        musculo_enfocado=datos.musculo_enfocado,
         grupo_muscular=grupo
     )
-    return ejercicio_obj
 
-@router.put("/ejercicios/{id}", response_model=EjercicioOut_Pydantic)
-async def actualizar_ejercicio(id: int, datos: EjercicioIn_Pydantic):
-    ejercicio = await Ejercicio.get_or_none(id=id)
+    await nuevo.fetch_related("grupo_muscular")
+    return nuevo
+
+
+@router.put("/ejercicios/{id}", response_model=schemas.EjercicioOut)
+async def actualizar_ejercicio(id: int, datos: schemas.EjercicioIn):
+    ejercicio = await models.Ejercicio.get_or_none(id=id)
     if not ejercicio:
         raise HTTPException(status_code=404, detail="Ejercicio no encontrado.")
-    grupo = await GrupoMuscular.get_or_none(id=datos.grupo_muscular_id)
+
+    grupo = await models.GrupoMuscular.get_or_none(id=datos.grupo_muscular_id)
     if not grupo:
-        raise HTTPException(status_code=404, detail="El grupo muscular indicado no existe.")
+        raise HTTPException(status_code=404, detail="Grupo muscular no encontrado.")
+
     ejercicio.nombre = datos.nombre
-    ejercicio.descripcion = datos.descripcion
+    ejercicio.musculo_enfocado = datos.musculo_enfocado
     ejercicio.grupo_muscular = grupo
     await ejercicio.save()
+    await ejercicio.fetch_related("grupo_muscular")
     return ejercicio
+
 
 @router.delete("/ejercicios/{id}")
 async def eliminar_ejercicio(id: int):
-    eliminado = await Ejercicio.filter(id=id).delete()
+    eliminado = await models.Ejercicio.filter(id=id).delete()
     if not eliminado:
         raise HTTPException(status_code=404, detail="Ejercicio no encontrado.")
     return {"message": "Ejercicio eliminado correctamente."}
+
+
+# ==========================================================
+# SESIONES DE ENTRENAMIENTO
+# ==========================================================
+
+@router.get("/sesiones", response_model=List[schemas.SesionEntrenamientoOut])
+async def listar_sesiones():
+    sesiones = await models.SesionEntrenamiento.all().prefetch_related("grupos_musculares")
+    return sesiones
+
+
+@router.get("/sesiones/{id}", response_model=schemas.SesionEntrenamientoOut)
+async def obtener_sesion(id: int):
+    sesion = await models.SesionEntrenamiento.get_or_none(id=id).prefetch_related("grupos_musculares")
+    if not sesion:
+        raise HTTPException(status_code=404, detail="Sesión no encontrada.")
+    return sesion
+
+
+@router.post("/sesiones", response_model=schemas.SesionEntrenamientoOut)
+async def crear_sesion(datos: schemas.SesionEntrenamientoIn):
+    grupos = await models.GrupoMuscular.filter(id__in=datos.grupo_ids)
+    if len(grupos) != len(datos.grupo_ids):
+        raise HTTPException(
+            status_code=404,
+            detail="Uno o más grupos musculares no existen."
+        )
+
+    sesion = await models.SesionEntrenamiento.create(
+        fecha=datos.fecha,
+        notas=datos.notas
+    )
+    await sesion.grupos_musculares.add(*grupos)
+    await sesion.fetch_related("grupos_musculares")
+    return sesion
+
+
+@router.put("/sesiones/{id}", response_model=schemas.SesionEntrenamientoOut)
+async def actualizar_sesion(id: int, datos: schemas.SesionEntrenamientoIn):
+    sesion = await models.SesionEntrenamiento.get_or_none(id=id)
+    if not sesion:
+        raise HTTPException(status_code=404, detail="Sesión no encontrada.")
+
+    grupos = await models.GrupoMuscular.filter(id__in=datos.grupo_ids)
+    if len(grupos) != len(datos.grupo_ids):
+        raise HTTPException(status_code=404, detail="Uno o más grupos musculares no existen.")
+
+    sesion.fecha = datos.fecha
+    sesion.notas = datos.notas
+    await sesion.save()
+
+    await sesion.grupos_musculares.clear()
+    await sesion.grupos_musculares.add(*grupos)
+
+    await sesion.fetch_related("grupos_musculares")
+    return sesion
+
+
+@router.delete("/sesiones/{id}")
+async def eliminar_sesion(id: int):
+    eliminado = await models.SesionEntrenamiento.filter(id=id).delete()
+    if not eliminado:
+        raise HTTPException(status_code=404, detail="Sesión no encontrada.")
+    return {"message": "Sesión eliminada correctamente."}

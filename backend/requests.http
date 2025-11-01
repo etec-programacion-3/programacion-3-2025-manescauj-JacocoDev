@@ -1,12 +1,11 @@
-### ===============================
-### 🏋️ GRUPOS MUSCULARES
-### ===============================
+# ==========================================================
+# GRUPOS MUSCULARES
+# ==========================================================
 
 ### GET: listar todos los grupos musculares
 GET http://127.0.0.1:8000/grupos-musculares
 Accept: application/json
 
-###
 
 ### POST: crear un nuevo grupo muscular
 POST http://127.0.0.1:8000/grupos-musculares
@@ -16,31 +15,35 @@ Content-Type: application/json
   "nombre": "Espalda"
 }
 
-###
 
 ### PUT: actualizar grupo muscular
-PUT http://127.0.0.1:8000/grupos-musculares/1
+PUT http://127.0.0.1:8000/grupos-musculares/2
 Content-Type: application/json
 
 {
   "nombre": "Dorsales"
 }
 
-###
 
 ### DELETE: eliminar grupo muscular
-DELETE http://127.0.0.1:8000/grupos-musculares/1
+DELETE http://127.0.0.1:8000/grupos-musculares/3
 Accept: application/json
 
-### ===============================
-### 🏋️‍♂️ EJERCICIOS
-### ===============================
+
+
+# ==========================================================
+# EJERCICIOS
+# ==========================================================
 
 ### GET: listar todos los ejercicios
 GET http://127.0.0.1:8000/ejercicios
 Accept: application/json
 
-###
+
+### GET: filtrar ejercicios por grupo muscular
+GET http://127.0.0.1:8000/ejercicios?grupo_muscular_id=1
+Accept: application/json
+
 
 ### POST: crear un ejercicio (usa un grupo muscular existente)
 POST http://127.0.0.1:8000/ejercicios
@@ -48,24 +51,64 @@ Content-Type: application/json
 
 {
   "nombre": "Dominadas",
-  "grupo_muscular_id": 2
+  "musculo_enfocado": "Espalda y bíceps",
+  "grupo_muscular_id": 1
 }
 
-### GET: filtrar ejercicios por grupo muscular
-GET http://127.0.0.1:8000/ejercicios?grupo_muscular_id=2
-Accept: application/json
 
 ### PUT: actualizar un ejercicio
-PUT http://127.0.0.1:8000/ejercicios/1
+PUT http://127.0.0.1:8000/ejercicios/2
 Content-Type: application/json
 
 {
   "nombre": "Dominadas Supinas",
+  "musculo_enfocado": "Variante enfocada en bíceps y dorsal ancho",
   "grupo_muscular_id": 2
 }
 
-###
 
 ### DELETE: eliminar un ejercicio
-DELETE http://127.0.0.1:8000/ejercicios/1
+DELETE http://127.0.0.1:8000/ejercicios/3
+Accept: application/json
+
+
+
+# ==========================================================
+# SESIONES DE ENTRENAMIENTO
+# ==========================================================
+
+### GET: listar todas las sesiones
+GET http://127.0.0.1:8000/sesiones
+Accept: application/json
+
+
+### GET: detalle de una sesión específica
+GET http://127.0.0.1:8000/sesiones/1
+Accept: application/json
+
+
+### POST: crear una nueva sesión
+POST http://127.0.0.1:8000/sesiones
+Content-Type: application/json
+
+{
+  "fecha": "2025-10-29",
+  "notas": "Sesión de espalda y bíceps",
+  "grupo_ids": [1, 2]
+}
+
+
+### PUT: actualizar una sesión existente
+PUT http://127.0.0.1:8000/sesiones/2
+Content-Type: application/json
+
+{
+  "fecha": "2025-10-30",
+  "notas": "Actualización: sesión más completa con tríceps",
+  "grupo_ids": [1, 2, 3]
+}
+
+
+### DELETE: eliminar una sesión
+DELETE http://127.0.0.1:8000/sesiones/3
 Accept: application/json
