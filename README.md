@@ -5,5 +5,5 @@ Notas:
  - ORM: Tortoise ORM
  - Gestor BD: SQLite
 
- - Vite
- - Axios
+ - Frontend: React + Vite
+ - Cliente HTTP: Axios

@@ -66,3 +66,17 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* estilos mínimos para errores */
+.error-text {
+  color: #b91c1c;
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+}
+
+/* estilos para inputs nativos si los usás */
+input[type="date"] {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
