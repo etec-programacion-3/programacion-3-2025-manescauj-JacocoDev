@@ -8,7 +8,7 @@ Accept: application/json
 
 
 ### POST: crear un nuevo grupo muscular
-POST http://127.0.0.1:8000/grupos-musculares
+POST http://127.0.0.1:8000/grupos-musulares
 Content-Type: application/json
 
 {
@@ -111,4 +111,50 @@ Content-Type: application/json
 
 ### DELETE: eliminar una sesión
 DELETE http://127.0.0.1:8000/sesiones/3
+Accept: application/json
+
+
+
+# ==========================================================
+# EJERCICIOS POR SESION
+# ==========================================================
+
+### GET: listar ejercicios disponibles para la sesión (filtrados por grupos musculares de la sesión)
+GET http://127.0.0.1:8000/sesiones/1/ejercicios
+Accept: application/json
+
+
+# ==========================================================
+# SERIES
+# ==========================================================
+
+### GET: listar series de una sesión
+GET http://127.0.0.1:8000/sesiones/1/series
+Accept: application/json
+
+
+### POST: crear una serie en la sesión (usa ejercicio existente)
+POST http://127.0.0.1:8000/sesiones/1/series
+Content-Type: application/json
+
+{
+  "ejercicio_id": 1,
+  "repeticiones": 8,
+  "peso": 60.0
+}
+
+
+### PUT: actualizar una serie existente
+PUT http://127.0.0.1:8000/series/2
+Content-Type: application/json
+
+{
+  "ejercicio_id": 2,
+  "repeticiones": 10,
+  "peso": 62.5
+}
+
+
+### DELETE: eliminar una serie
+DELETE http://127.0.0.1:8000/series/3
 Accept: application/json

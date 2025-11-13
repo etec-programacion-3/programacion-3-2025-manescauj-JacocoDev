@@ -17,7 +17,7 @@ const SessionPage = () => {
         const data = await getSessionById(id);
         setSession(data);
         setFormData({
-          fecha: data.fecha ? data.fecha.split("T")[0] : "",
+          fecha: data.fecha ? String(data.fecha).split("T")[0] : "",
           notas: data.notas || "",
         });
       } catch (error) {
@@ -145,7 +145,7 @@ const SessionPage = () => {
       </div>
 
       {/* Tabla de ejercicios (nuevo componente) */}
-      <ExerciseTable />
+      <ExerciseTable sessionId={session.id} />
     </div>
   );
 };

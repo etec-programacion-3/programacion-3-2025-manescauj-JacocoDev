@@ -64,9 +64,10 @@ async def listar_ejercicios(grupo_muscular_id: Optional[int] = Query(None)):
 
 @router.get("/ejercicios/{id}", response_model=schemas.EjercicioOut)
 async def obtener_ejercicio(id: int):
-    ejercicio = await models.Ejercicio.get_or_none(id=id).prefetch_related("grupo_muscular")
+    ejercicio = await models.Ejercicio.get_or_none(id=id)
     if not ejercicio:
         raise HTTPException(status_code=404, detail="Ejercicio no encontrado.")
+    await ejercicio.fetch_related("grupo_muscular")
     return ejercicio
 
 
@@ -121,15 +122,25 @@ async def eliminar_ejercicio(id: int):
 
 @router.get("/sesiones", response_model=List[schemas.SesionEntrenamientoOut])
 async def listar_sesiones():
-    sesiones = await models.SesionEntrenamiento.all().prefetch_related("grupos_musculares")
+    sesiones = await models.SesionEntrenamiento.all().prefetch_related(
+        "grupos_musculares",
+        "series__ejercicio",
+        "series__ejercicio__grupo_muscular"
+    )
     return sesiones
+
 
 
 @router.get("/sesiones/{id}", response_model=schemas.SesionEntrenamientoOut)
 async def obtener_sesion(id: int):
-    sesion = await models.SesionEntrenamiento.get_or_none(id=id).prefetch_related("grupos_musculares")
+    sesion = await models.SesionEntrenamiento.get_or_none(id=id)
     if not sesion:
         raise HTTPException(status_code=404, detail="Sesión no encontrada.")
+    await sesion.fetch_related(
+        "grupos_musculares",
+        "series__ejercicio",
+        "series__ejercicio__grupo_muscular"
+    )
     return sesion
 
 
@@ -147,7 +158,11 @@ async def crear_sesion(datos: schemas.SesionEntrenamientoIn):
         notas=datos.notas
     )
     await sesion.grupos_musculares.add(*grupos)
-    await sesion.fetch_related("grupos_musculares")
+    await sesion.fetch_related(
+        "grupos_musculares",
+        "series__ejercicio",
+        "series__ejercicio__grupo_muscular"
+    )
     return sesion
 
 
@@ -168,7 +183,11 @@ async def actualizar_sesion(id: int, datos: schemas.SesionEntrenamientoIn):
     await sesion.grupos_musculares.clear()
     await sesion.grupos_musculares.add(*grupos)
 
-    await sesion.fetch_related("grupos_musculares")
+    await sesion.fetch_related(
+        "grupos_musculares",
+        "series__ejercicio",
+        "series__ejercicio__grupo_muscular"
+    )
     return sesion
 
 
@@ -178,3 +197,77 @@ async def eliminar_sesion(id: int):
     if not eliminado:
         raise HTTPException(status_code=404, detail="Sesión no encontrada.")
     return {"message": "Sesión eliminada correctamente."}
+
+
+# ==========================================================
+# EJERCICIOS POR SESION
+# ==========================================================
+
+@router.get("/sesiones/{id}/ejercicios", response_model=List[schemas.EjercicioOut])
+async def ejercicios_por_sesion(id: int):
+    sesion = await models.SesionEntrenamiento.get_or_none(id=id)
+    if not sesion:
+        raise HTTPException(status_code=404, detail="Sesión no encontrada.")
+    await sesion.fetch_related("grupos_musculares")
+    grupo_ids = [g.id for g in sesion.grupos_musculares]
+    ejercicios = await models.Ejercicio.filter(grupo_muscular_id__in=grupo_ids).prefetch_related("grupo_muscular")
+    return ejercicios
+
+
+# ==========================================================
+# SERIES
+# ==========================================================
+
+@router.get("/sesiones/{id}/series", response_model=List[schemas.SerieOut])
+async def listar_series_por_sesion(id: int):
+    sesion = await models.SesionEntrenamiento.get_or_none(id=id)
+    if not sesion:
+        raise HTTPException(status_code=404, detail="Sesión no encontrada.")
+    series = await models.Serie.filter(sesion_id=id).prefetch_related("ejercicio", "ejercicio__grupo_muscular")
+    return series
+
+
+@router.post("/sesiones/{id}/series", response_model=schemas.SerieOut)
+async def crear_serie(id: int, datos: schemas.SerieIn):
+    sesion = await models.SesionEntrenamiento.get_or_none(id=id)
+    if not sesion:
+        raise HTTPException(status_code=404, detail="Sesión no encontrada.")
+
+    ejercicio = await models.Ejercicio.get_or_none(id=datos.ejercicio_id)
+    if not ejercicio:
+        raise HTTPException(status_code=404, detail="Ejercicio no encontrado.")
+
+    nueva = await models.Serie.create(
+        repeticiones=datos.repeticiones,
+        peso=datos.peso,
+        ejercicio=ejercicio,
+        sesion=sesion
+    )
+    await nueva.fetch_related("ejercicio", "ejercicio__grupo_muscular")
+    return nueva
+
+
+@router.put("/series/{id}", response_model=schemas.SerieOut)
+async def actualizar_serie(id: int, datos: schemas.SerieIn):
+    serie = await models.Serie.get_or_none(id=id)
+    if not serie:
+        raise HTTPException(status_code=404, detail="Serie no encontrada.")
+
+    ejercicio = await models.Ejercicio.get_or_none(id=datos.ejercicio_id)
+    if not ejercicio:
+        raise HTTPException(status_code=404, detail="Ejercicio no encontrado.")
+
+    serie.ejercicio = ejercicio
+    serie.repeticiones = datos.repeticiones
+    serie.peso = datos.peso
+    await serie.save()
+    await serie.fetch_related("ejercicio", "ejercicio__grupo_muscular")
+    return serie
+
+
+@router.delete("/series/{id}")
+async def eliminar_serie(id: int):
+    eliminado = await models.Serie.filter(id=id).delete()
+    if not eliminado:
+        raise HTTPException(status_code=404, detail="Serie no encontrada.")
+    return {"message": "Serie eliminada correctamente."}
