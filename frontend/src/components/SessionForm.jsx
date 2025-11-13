@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import api from "../services/api";
+import { getGruposMusculares, createSession } from "../services/api";
 import DatePicker from "react-datepicker";
 import Select from "react-select";
 import "react-datepicker/dist/react-datepicker.css";
@@ -15,8 +15,8 @@ const SessionForm = ({ onCreated, onCancel }) => {
   useEffect(() => {
     const fetchGrupos = async () => {
       try {
-        const res = await api.get("/grupos-musculares");
-        const opts = res.data.map((g) => ({ value: g.id, label: g.nombre }));
+        const data = await getGruposMusculares();
+        const opts = data.map((g) => ({ value: g.id, label: g.nombre }));
         setGruposOptions(opts);
       } catch (err) {
         console.error("Error cargando grupos musculares:", err);
@@ -41,7 +41,6 @@ const SessionForm = ({ onCreated, onCancel }) => {
     if (!validate()) return;
     setLoading(true);
     try {
-      // Evitar desfase de zona horaria: convertir a medianoche local
       const localMidnight = new Date(
         fecha.getFullYear(),
         fecha.getMonth(),
@@ -61,8 +60,8 @@ const SessionForm = ({ onCreated, onCancel }) => {
         grupo_ids: selectedGrupos.map((g) => g.value),
       };
 
-      const res = await api.post("/sesiones", payload);
-      if (res && res.data) onCreated(res.data);
+      const newSession = await createSession(payload);
+      if (newSession) onCreated(newSession);
     } catch (err) {
       console.error(err);
       if (err.response?.data?.detail) {
