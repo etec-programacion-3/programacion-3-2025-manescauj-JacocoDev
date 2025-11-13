@@ -1,16 +1,21 @@
-import React from "react";
-import Header from "./components/Header";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
+import SessionPage from "./pages/SessionPage";
 
-const App = () => {
+function App() {
   return (
-    <div className="min-h-screen bg-gray-100 font-sans">
-      <Header />
-      <main className="max-w-3xl mx-auto p-6">
-        <HomePage />
-      </main>
-    </div>
+    <Router>
+      <div className="container mx-auto p-6">
+        <h1 className="text-2xl font-bold text-center mb-8">
+          🏋️ Proyecto Integrador — Sessions
+        </h1>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/session/:id" element={<SessionPage />} />
+        </Routes>
+      </div>
+    </Router>
   );
-};
+}
 
 export default App;
