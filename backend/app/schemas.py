@@ -61,6 +61,7 @@ class SesionEntrenamientoIn(SesionEntrenamientoBase):
 class SesionEntrenamientoOut(SesionEntrenamientoBase):
     id: int
     grupos_musculares: List[GrupoMuscularOut]
+    series: List["SerieOut"] = []
 
     class Config:
         from_attributes = True
@@ -81,7 +82,11 @@ class SerieIn(SerieBase):
 
 class SerieOut(SerieBase):
     id: int
-    ejercicio_id: int
+    ejercicio: EjercicioOut
 
     class Config:
         from_attributes = True
+
+
+SesionEntrenamientoOut.update_forward_refs()
+SerieOut.update_forward_refs()
