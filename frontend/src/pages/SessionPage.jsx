@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getSessionById, updateSession, deleteSession } from "../services/api";
-import ExerciseTable from "../components/ExerciseTable";
+import ExerciseTable from "../components/SerieTable";
 
 const SessionPage = () => {
   const { id } = useParams();
@@ -70,7 +70,7 @@ const SessionPage = () => {
   if (!session) return <p>No se encontró la sesión.</p>;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-4">
+    <div className="max-w-3xl mx-auto space-y-4 bg-gray-50 min-h-screen p-6 text-gray-900">
       {/* Header */}
       <div className="flex items-center justify-between">
         <button onClick={() => navigate("/")} className="text-blue-600 hover:underline">
@@ -144,7 +144,7 @@ const SessionPage = () => {
         )}
       </div>
 
-      {/* Tabla de ejercicios (nuevo componente) */}
+      {/* Tabla de ejercicios */}
       <ExerciseTable sessionId={session.id} />
     </div>
   );

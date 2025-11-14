@@ -1,19 +1,18 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
+import ExercisesPage from "./pages/ExercisesPage";
+import MuscleGroupsPage from "./pages/MuscleGroupsPage";
 import SessionPage from "./pages/SessionPage";
 
 function App() {
   return (
     <Router>
-      <div className="container mx-auto p-6">
-        <h1 className="text-2xl font-bold text-center mb-8">
-          🏋️ Proyecto Integrador — Sessions
-        </h1>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/session/:id" element={<SessionPage />} />
-        </Routes>
-      </div>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/exercises" element={<ExercisesPage />} />
+        <Route path="/grupos-musculares" element={<MuscleGroupsPage />} />
+        <Route path="/session/:id" element={<SessionPage />} />
+      </Routes>
     </Router>
   );
 }
